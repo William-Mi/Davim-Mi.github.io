@@ -1,5 +1,5 @@
-#Linux 命令格式说明文档语法规律
-##前言
+# Linux 命令格式说明文档语法规律
+## 前言
 Linux shell命令通常可以通过-h或--help来打印帮助说明，或者通过man命令来查看帮助，有时候我们也会给自己的程序                 
 写简单的帮助说明，其实帮助说明格式是有规律可循的
 ##示例
@@ -19,7 +19,7 @@ git reset [--soft | --mixed | --hard | --merge | --keep] [-q] [<commit>]
 * ... : 可重复指定前一个参数
 * --  : 标记后续参数类型
 
-###原生参数
+### 原生参数
 说明文档里的字符即为命令需要使用的字符，比如以上命令的
 ```java
 git reset
@@ -96,7 +96,7 @@ git cat-file <type> <object>
 git cat-file --textconv <object>
 ```
 
-###结束
+### 结束
 
 
 
