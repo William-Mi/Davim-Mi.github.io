@@ -28,7 +28,8 @@ class LooperThread extends Thread {
       }
   }
   ```  
-  ### Looper创建
+  ### Looper创建  
+  
  ```java
 private Looper(boolean quitAllowed) {
         mQueue = new MessageQueue(quitAllowed);
@@ -115,8 +116,7 @@ public static void loop() {
 4. 取出一条消息，如果没有消息则阻塞
 5. 调用 msg.target.dispatchMessage(msg);把消息交给msg的target的dispatchMessage方法去处理。Msg的target其实就是handler对象  
 
-## Handler  
-
+## Handler
 A Handler allows you to send and process Message and Runnable objects associated with a thread's MessageQueue. Each Handler instance is associated with a single thread and that thread's message queue. When you create a new Handler, it is bound to the thread / message queue of the thread that is creating it -- from that point on, it will deliver messages and runnables to that message queue and execute them as they come out of the message queue.  
 
 There are two main uses for a Handler: (1) to schedule messages and runnables to be executed as some point in the future; and (2) to enqueue an action to be performed on a different thread than your own.  
@@ -129,10 +129,10 @@ When a process is created for your application, its main thread is dedicated to 
 
 
 ```java
-public Handler() {  
+    public Handler() {  
         this(null, false);  
 }  
-public Handler(Callback callback, boolean async) {  
+    public Handler(Callback callback, boolean async) {  
         if (FIND_POTENTIAL_LEAKS) {  
             final Class<? extends Handler> klass = getClass();  
             if ((klass.isAnonymousClass() || klass.isMemberClass() || klass.isLocalClass()) &&  
@@ -152,10 +152,12 @@ public Handler(Callback callback, boolean async) {
         mAsynchronous = async;  
     }  
     ```  
- 通过Looper.myLooper()获取了当前线程保存的Looper实例，然后就可以获得在这个Looper实例中保存的MessageQueue（消息队列），这样就保证了handler的实例与我们Looper实例中MessageQueue关联上了。  
-###sendMessage  
+    
+通过Looper.myLooper()获取了当前线程保存的Looper实例，然后就可以获得在这个Looper实例中保存的MessageQueue（消息队列），这样就保证了handler的实例与我们Looper实例中MessageQueue关联上了。  
+ 
+### sendMessage
 ```java
-/**
+    /**
      * Pushes a message onto the end of the message queue after all pending messages
      * before the current time. It will be received in {@link #handleMessage},
      * in the thread attached to this handler.
@@ -187,7 +189,7 @@ public Handler(Callback callback, boolean async) {
     }  
  ```  
  ```java
- /**
+    /**
      * Enqueue a message into the message queue after all pending messages
      * before the absolute time (in milliseconds) <var>uptimeMillis</var>.
      * <b>The time-base is {@link android.os.SystemClock#uptimeMillis}.</b>
@@ -232,7 +234,7 @@ enqueueMessage中首先为meg.target赋值为this，【Looper的loop方法会取
 
 ==现在已经很清楚了Looper会调用prepare()和loop()方法，在当前执行的线程中保存一个Looper实例，这个实例会保存一个MessageQueue对象，然后当前线程进入一个无限循环中去，不断从MessageQueue中读取Handler发来的消息。然后再回调创建这个消息的handler中的dispathMessage方法==  
 
-###post(Runnable r)  
+### post(Runnable r)  
 ```java
  /**
      * Causes the Runnable r to be added to the message queue.
@@ -262,7 +264,7 @@ private static Message getPostMessage(Runnable r) {
 
 在getPostMessage中，得到了一个Message对象，然后将我们创建的Runable对象作为callback属性，赋值给了此message  
 
-###dispatchMessage( )  
+### dispatchMessage( )  
 
 ```java
 public void dispatchMessage(Message msg) {
@@ -280,7 +282,7 @@ public void dispatchMessage(Message msg) {
     ```  
 最后调用了handleMessage方法  
 ```java
-/**
+    /**
      * Subclasses must implement this to receive messages.
      */
     public void handleMessage(Message msg) {
@@ -289,7 +291,7 @@ public void dispatchMessage(Message msg) {
 
 这是一个空方法，因为消息的最终回调是由我们控制的，我们在创建handler的时候都是复写handleMessage方法，然后根据msg.what进行消息处理
 
-##总结
+## 总结
 1. 首先Looper.prepare()在本线程中保存一个Looper实例，然后该实例中保存一个MessageQueue对象；因为Looper.prepare()在一个线程中只能调用一次，所以MessageQueue在一个线程中只会存在一个。
 
 2. Looper.loop()会让当前线程进入一个无限循环，不端从MessageQueue的实例中读取消息，然后回调msg.target.dispatchMessage(msg)方法。
