@@ -28,8 +28,7 @@ class LooperThread extends Thread {
       }
   }
   ```  
-  ### Looper创建  
-  
+### Looper创建
  ```java
 private Looper(boolean quitAllowed) {
         mQueue = new MessageQueue(quitAllowed);
@@ -38,8 +37,8 @@ private Looper(boolean quitAllowed) {
 ```   
 * 创建一个MessageQueue实例
 * 获取当前线所在的线程  
-    
-### Looper.prepare( )  
+
+### Looper.prepare( )
 Initialize the current thread as a looper. This gives you a chance to create handlers that then reference this looper, before actually starting the loop. Be sure to call loop() after calling this method, and end it by calling quit().  
 ```java
 private static void prepare(boolean quitAllowed) {
@@ -54,7 +53,7 @@ sThreadLocal是一个ThreadLocal对象，可以在一个线程中存储变量。
 * 如果设置了，直接抛出异常，这也就说明了Looper.prepare()方法不能被调用两次，同时也保证了一个线程中只有一个Looper实例  
 * 如果没有设置，为当前线程创建一个Looper实例  
 
-### Looper.loop( )  
+### Looper.loop( )
 Run the message queue in this thread. Be sure to call quit() to end the loop.  
 
 ```java
@@ -234,7 +233,7 @@ enqueueMessage中首先为meg.target赋值为this，【Looper的loop方法会取
 
 ==现在已经很清楚了Looper会调用prepare()和loop()方法，在当前执行的线程中保存一个Looper实例，这个实例会保存一个MessageQueue对象，然后当前线程进入一个无限循环中去，不断从MessageQueue中读取Handler发来的消息。然后再回调创建这个消息的handler中的dispathMessage方法==  
 
-### post(Runnable r)  
+### post(Runnable r)
 ```java
     /**
      * Causes the Runnable r to be added to the message queue.
@@ -264,8 +263,7 @@ private static Message getPostMessage(Runnable r) {
 
 在getPostMessage中，得到了一个Message对象，然后将我们创建的Runable对象作为callback属性，赋值给了此message  
 
-### dispatchMessage( )  
-
+### dispatchMessage( )
 ```java
 public void dispatchMessage(Message msg) {
         if (msg.callback != null) {
