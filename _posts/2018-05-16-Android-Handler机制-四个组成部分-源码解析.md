@@ -1,10 +1,10 @@
 # Android Handler机制，四个组成部分及源码解析
-##概述  
+## 概述  
 Handler 、 Looper 、Message 、MessageQueue等组成了Android异步消息处理机制  
 其中，异步消息处理线程启动后会进入一个无限循环体之中，每循环一次，从其内部的消息队列中取出一个消息，然后回调相应的消息处理函数，执行完成一个消息后则继续循环。若消息队列为空，线程则会阻塞等待。  
 Looper负责的就是创建一个MessageQueue，然后进入一个无限循环体不断从该MessageQueue中读取消息，而Message的创建者就是一个或多个Handler。  
 
-##Looper  
+## Looper  
 Class used to run a message loop for a thread. Threads by default do not have a message loop associated with them; to create one, call prepare() in the thread that is to run the loop, and then loop() to have it process messages until the loop is stopped.  
 
 Most interaction with a message loop is through the Handler class.  
@@ -27,7 +27,7 @@ class LooperThread extends Thread {
       }
   }
   ```  
-  ###Looper创建
+  ### Looper创建
  ```java
 private Looper(boolean quitAllowed) {
         mQueue = new MessageQueue(quitAllowed);
@@ -37,7 +37,7 @@ private Looper(boolean quitAllowed) {
 * 创建一个MessageQueue实例
 * 获取当前线所在的线程  
     
-###Looper.prepare( )  
+### Looper.prepare( )  
 Initialize the current thread as a looper. This gives you a chance to create handlers that then reference this looper, before actually starting the loop. Be sure to call loop() after calling this method, and end it by calling quit().  
 ```java
 private static void prepare(boolean quitAllowed) {
@@ -52,7 +52,7 @@ sThreadLocal是一个ThreadLocal对象，可以在一个线程中存储变量。
 * 如果设置了，直接抛出异常，这也就说明了Looper.prepare()方法不能被调用两次，同时也保证了一个线程中只有一个Looper实例  
 * 如果没有设置，为当前线程创建一个Looper实例  
 
-###Looper.loop( )  
+### Looper.loop( )  
 Run the message queue in this thread. Be sure to call quit() to end the loop.  
 
 ```java
@@ -103,16 +103,18 @@ public static void loop() {
         }
     }
     ```  
+    
+    
 1. public static Looper myLooper() {
-return sThreadLocal.get();
-}
-方法直接返回了sThreadLocal存储的Looper实例，如果me为null则抛出异常，也就是说looper方法必须在prepare方法之后运行。  
+    return sThreadLocal.get();
+    }
+    方法直接返回了sThreadLocal存储的Looper实例，如果me为null则抛出异常，也就是说looper方法必须在prepare方法之后运行。  
 2. 获取looper实例中的MessageQueue
 3. 进入无限循环
 4. 取出一条消息，如果没有消息则阻塞
 5. 调用 msg.target.dispatchMessage(msg);把消息交给msg的target的dispatchMessage方法去处理。Msg的target其实就是handler对象  
 
-##Handler  
+## Handler  
 
 A Handler allows you to send and process Message and Runnable objects associated with a thread's MessageQueue. Each Handler instance is associated with a single thread and that thread's message queue. When you create a new Handler, it is bound to the thread / message queue of the thread that is creating it -- from that point on, it will deliver messages and runnables to that message queue and execute them as they come out of the message queue.  
 
@@ -122,7 +124,8 @@ Scheduling messages is accomplished with the post(Runnable), postAtTime(Runnable
 
 When posting or sending to a Handler, you can either allow the item to be processed as soon as the message queue is ready to do so, or specify a delay before it gets processed or absolute time for it to be processed. The latter two allow you to implement timeouts, ticks, and other timing-based behavior.  
 
-When a process is created for your application, its main thread is dedicated to running a message queue that takes care of managing the top-level application objects (activities, broadcast receivers, etc) and any windows they create. You can create your own threads, and communicate back with the main application thread through a Handler. This is done by calling the same post or sendMessage methods as before, but from your new thread. The given Runnable or Message will then be scheduled in the Handler's message queue and processed when appropriate.
+When a process is created for your application, its main thread is dedicated to running a message queue that takes care of managing the top-level application objects (activities, broadcast receivers, etc) and any windows they create. You can create your own threads, and communicate back with the main application thread through a Handler. This is done by calling the same post or sendMessage methods as before, but from your new thread. The given Runnable or Message will then be scheduled in the Handler's message queue and processed when appropriate.  
+
 
 ```java
 public Handler() {  
