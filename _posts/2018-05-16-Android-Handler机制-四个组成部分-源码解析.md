@@ -1,10 +1,11 @@
-# Android Handler机制，四个组成部分及源码解析
-## 概述  
+# Android Handler机制，四个组成部分及源码解析  
+
+## 概述
 Handler 、 Looper 、Message 、MessageQueue等组成了Android异步消息处理机制  
 其中，异步消息处理线程启动后会进入一个无限循环体之中，每循环一次，从其内部的消息队列中取出一个消息，然后回调相应的消息处理函数，执行完成一个消息后则继续循环。若消息队列为空，线程则会阻塞等待。  
 Looper负责的就是创建一个MessageQueue，然后进入一个无限循环体不断从该MessageQueue中读取消息，而Message的创建者就是一个或多个Handler。  
 
-## Looper  
+## Looper
 Class used to run a message loop for a thread. Threads by default do not have a message loop associated with them; to create one, call prepare() in the thread that is to run the loop, and then loop() to have it process messages until the loop is stopped.  
 
 Most interaction with a message loop is through the Handler class.  
@@ -102,9 +103,9 @@ public static void loop() {
             msg.recycleUnchecked();
         }
     }
-    ```  
+```  
     
-    
+执行流程如下：
 1. public static Looper myLooper() {
     return sThreadLocal.get();
     }
