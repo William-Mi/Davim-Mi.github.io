@@ -131,7 +131,7 @@ When a process is created for your application, its main thread is dedicated to 
 ```java
     public Handler() {  
         this(null, false);  
-}  
+	}  
     public Handler(Callback callback, boolean async) {  
         if (FIND_POTENTIAL_LEAKS) {  
             final Class<? extends Handler> klass = getClass();  
@@ -151,7 +151,7 @@ When a process is created for your application, its main thread is dedicated to 
         mCallback = callback;  
         mAsynchronous = async;  
     }  
-    ```  
+```  
     
 通过Looper.myLooper()获取了当前线程保存的Looper实例，然后就可以获得在这个Looper实例中保存的MessageQueue（消息队列），这样就保证了handler的实例与我们Looper实例中MessageQueue关联上了。  
  
@@ -170,7 +170,7 @@ When a process is created for your application, its main thread is dedicated to 
     {
         return sendMessageDelayed(msg, 0);
     }
-    ```  
+```  
     
 ```java
     public final boolean sendEmptyMessageDelayed(int what, long delayMillis) {  
@@ -178,8 +178,8 @@ When a process is created for your application, its main thread is dedicated to 
      msg.what = what;  
      return sendMessageDelayed(msg, delayMillis);  
  }
- ```
-   ```java
+```
+```java
     public final boolean sendMessageDelayed(Message msg, long delayMillis)
     {
         if (delayMillis < 0) {
@@ -187,8 +187,8 @@ When a process is created for your application, its main thread is dedicated to 
         }
         return sendMessageAtTime(msg, SystemClock.uptimeMillis() + delayMillis);
     }  
- ```  
- ```java
+```  
+```java
     /**
      * Enqueue a message into the message queue after all pending messages
      * before the absolute time (in milliseconds) <var>uptimeMillis</var>.
@@ -218,7 +218,7 @@ When a process is created for your application, its main thread is dedicated to 
         }
         return enqueueMessage(queue, msg, uptimeMillis);
     }
-    ```  
+```
 
 
 ```java
@@ -229,14 +229,14 @@ When a process is created for your application, its main thread is dedicated to 
         }
         return queue.enqueueMessage(msg, uptimeMillis);
     }
-    ```  
+```  
 enqueueMessage中首先为meg.target赋值为this，【Looper的loop方法会取出每个msg然后交给msg的target的dispatchMessage(msg)方法去处理消息】，也就是把当前的handler作为msg的target属性，最终会调用MessageQueue的enqueueMessage的方法，也就是说handler发出的消息，最终会保存到Looper中的MessageQueue中去  
 
 ==现在已经很清楚了Looper会调用prepare()和loop()方法，在当前执行的线程中保存一个Looper实例，这个实例会保存一个MessageQueue对象，然后当前线程进入一个无限循环中去，不断从MessageQueue中读取Handler发来的消息。然后再回调创建这个消息的handler中的dispathMessage方法==  
 
 ### post(Runnable r)  
 ```java
- /**
+    /**
      * Causes the Runnable r to be added to the message queue.
      * The runnable will be run on the thread to which this handler is 
      * attached. 
@@ -251,7 +251,7 @@ enqueueMessage中首先为meg.target赋值为this，【Looper的loop方法会取
     {
        return  sendMessageDelayed(getPostMessage(r), 0);
     }
-    ```
+```
     
 ==产生一个Message对象，可以new  ，也可以使用Message.obtain()方法；两者都可以，但是更建议使用obtain方法，因为Message内部维护了一个Message池用于Message的复用，避免使用new 重新分配内存==
 ```java
@@ -260,7 +260,7 @@ private static Message getPostMessage(Runnable r) {
         m.callback = r;
         return m;
     }
-    ```  
+```  
 
 在getPostMessage中，得到了一个Message对象，然后将我们创建的Runable对象作为callback属性，赋值给了此message  
 
@@ -279,7 +279,7 @@ public void dispatchMessage(Message msg) {
             handleMessage(msg);
         }
     }
-    ```  
+```  
 最后调用了handleMessage方法  
 ```java
     /**
@@ -287,7 +287,7 @@ public void dispatchMessage(Message msg) {
      */
     public void handleMessage(Message msg) {
     }
-    ```
+```
 
 这是一个空方法，因为消息的最终回调是由我们控制的，我们在创建handler的时候都是复写handleMessage方法，然后根据msg.what进行消息处理
 
