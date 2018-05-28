@@ -5,6 +5,9 @@ Handler 、 Looper 、Message 、MessageQueue等组成了Android异步消息处�
 其中，异步消息处理线程启动后会进入一个无限循环体之中，每循环一次，从其内部的消息队列中取出一个消息，然后回调相应的消息处理函数，执行完成一个消息后则继续循环。若消息队列为空，线程则会阻塞等待。  
 Looper负责的就是创建一个MessageQueue，然后进入一个无限循环体不断从该MessageQueue中读取消息，而Message的创建者就是一个或多个Handler。  
 
+参考连接 ：  [Handler消息机制再梳理] [1]
+[1]:https://itimetraveler.github.io/2017/08/03/%E3%80%90Android%E3%80%91%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%20-%20Handler%E6%B6%88%E6%81%AF%E6%9C%BA%E5%88%B6%E5%86%8D%E6%A2%B3%E7%90%86/
+
 ## Looper
 Class used to run a message loop for a thread. Threads by default do not have a message loop associated with them; to create one, call prepare() in the thread that is to run the loop, and then loop() to have it process messages until the loop is stopped.  
 
