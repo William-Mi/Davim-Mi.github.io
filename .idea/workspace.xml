@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="63d0f39f-f96a-45b7-a484-212fc6c58005" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/_posts/2018-05-30-HashMap原理.md" beforeDir="false" afterPath="$PROJECT_DIR$/_posts/2018-05-30-HashMap原理.md" afterDir="false" />
-    </list>
+    <list default="true" id="63d0f39f-f96a-45b7-a484-212fc6c58005" name="Default" comment="" />
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
     <ignored path="$PROJECT_DIR$/tmp/" />
