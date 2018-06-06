@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="63d0f39f-f96a-45b7-a484-212fc6c58005" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/_posts/2018-05-30-HashMap原理.md" beforeDir="false" afterPath="$PROJECT_DIR$/_posts/2018-05-30-HashMap原理.md" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
@@ -108,7 +107,7 @@
   <component name="NodePackageJsonFileManager">
     <packageJsonPaths />
   </component>
-  <component name="ProjectFrameBounds" extendedState="7">
+  <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="-84" />
     <option name="y" value="62" />
     <option name="width" value="1830" />
@@ -160,6 +159,14 @@
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
   </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="E:\Workspage-open\Davim-Mi.github.io\images\posts\2018-05-30" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\Workspage-open\Davim-Mi.github.io\images\posts" />
+    </key>
+  </component>
   <component name="RunDashboard">
     <option name="ruleStates">
       <list>
@@ -185,15 +192,15 @@
       <workItem from="1526386475085" duration="7362000" />
       <workItem from="1527385681007" duration="5078000" />
       <workItem from="1527661150386" duration="3395000" />
-      <workItem from="1528254249908" duration="1900000" />
+      <workItem from="1528254249908" duration="3096000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="15768000" />
+    <option name="totallyTimeSpent" value="16964000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-9" y="-9" width="1848" height="1098" extended-state="7" />
+    <frame x="-9" y="-9" width="1848" height="1098" extended-state="6" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.40367484" />
       <window_info anchor="bottom" id="TODO" order="6" />
