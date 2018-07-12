@@ -45,7 +45,7 @@ zero, then tries again to gain ownership.
 
 - **monitorexit**  
 
-JVM标准中解释如下： 
+JVM标准中解释如下：  
 The objectref must be of type reference.
 The thread that executes monitorexit must be the owner of the
 monitor associated with the instance referenced by objectref.
@@ -60,7 +60,7 @@ so
 指令执行时，monitor的进入数减1，如果减1后进入数为0，那线程退出monitor，不再是这个monitor的所有者。其他被这个monitor阻塞的线程可以尝试去获取这个 monitor 的所有权。  
 
 通过这两段描述，我们应该能很清楚的看出Synchronized的实现原理，Synchronized的语义底层是通过一个monitor的对象来完成，其实wait/notify等方法也依赖于monitor对象，这就是为什么只有在同步的块或者方法中才能调用wait/notify等方法，否则会抛出java.lang.IllegalMonitorStateException的异常的原因  
-
+***
 ## sychronized修饰方法  
 示例代码如下：
 ```java
