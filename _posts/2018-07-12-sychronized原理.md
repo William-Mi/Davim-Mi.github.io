@@ -11,8 +11,8 @@ public class SynchronizedDemo {
             System.out.println("Method 1 start");
         }
     }
-}```
-
+}
+```
 &emsp;&emsp;反编译对应的class文件，结果如下：  
 <a href="https://davim-mi.github.io/">
   <img src="/images/posts/2018-07-12/synchronized_code_block.png">
