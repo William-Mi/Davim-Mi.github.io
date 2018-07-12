@@ -1,7 +1,7 @@
-# synchronized关键字
-## synchronized原理  
-### synchronized修饰代码块
-&emsp;&emsp;示例代码如下：
+# synchronized关键字  
+
+## synchronized修饰代码块  
+示例代码如下：
 ```java
 package com.davim.test.concurrent;
 
@@ -13,11 +13,12 @@ public class SynchronizedDemo {
     }
 }
 ```
-&emsp;&emsp;反编译对应的class文件，结果如下：  
+反编译对应的class文件，结果如下：  
 <a href="https://davim-mi.github.io/">
   <img src="/images/posts/2018-07-12/synchronized_code_block.png">
 </a>  
-- **monitorenter**
+- **monitorenter**  
+
 JVM标准中解释如下：  
 The objectref must be of type reference.
 Each object is associated with a monitor. A monitor is locked if
@@ -42,7 +43,8 @@ zero, then tries again to gain ownership.
 
 3. 如果其他线程已经占用了monitor，则该线程进入阻塞状态，直到monitor的进入数为0，再重新尝试获取monitor的所有权  
 
-- **monitorexit**   
+- **monitorexit**  
+
 JVM标准中解释如下： 
 The objectref must be of type reference.
 The thread that executes monitorexit must be the owner of the
@@ -59,8 +61,8 @@ so
 
 通过这两段描述，我们应该能很清楚的看出Synchronized的实现原理，Synchronized的语义底层是通过一个monitor的对象来完成，其实wait/notify等方法也依赖于monitor对象，这就是为什么只有在同步的块或者方法中才能调用wait/notify等方法，否则会抛出java.lang.IllegalMonitorStateException的异常的原因  
 
-##sychronized修饰方法  
-&emsp;&emsp;示例代码如下：
+## sychronized修饰方法  
+示例代码如下：
 ```java
 package com.davim.testgilde;
 
@@ -70,7 +72,7 @@ public class SynchronizedMethod {
     }
 }
 ```
-&emsp;&emsp;反编译对应的class文件，结果如下：  
+反编译对应的class文件，结果如下：  
 <a href="https://davim-mi.github.io/">
   <img src="/images/posts/2018-07-12/synchronized_method.png">
 </a>  
