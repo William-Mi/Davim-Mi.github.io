@@ -41,7 +41,8 @@ XXXKB until OOM
 ````
 
 前面已经提到发现的 OOM 案例中堆内存充裕（Runtime.getRuntime().maxMemory() 大小的堆内存还剩余很大一部分），设备当前内存也很充裕（ActivityManager.MemoryInfo.availMem 还有很多）。这些 OOM 的错误信息大致有下面两种：
-
+  
+  
 ### 2.1  这种 OOM 在 Android6.0，Android7.0 上各个机型均有发生，文中简称为 OOM 一，错误信息如下：
 ```
 java.lang.OutOfMemoryError: Could not allocate JNI ENV
@@ -52,7 +53,8 @@ java.lang.OutOfMemoryError: Could not allocate JNI ENV
 ```
 java.lang.OutOfMemoryError: pthread_create(1040KB stack) failed: Out of memory
 ```
-
+  
+  
 ## 3. 问题分析及解决
 ### 3.1代码分析
 Android 系统中，OutOfMemoryError 这个错误是怎么被系统抛出的？下面基于 Android6.0 的代码进行简单分析：
@@ -94,10 +96,12 @@ PrettySize(stack_size).c_star(), strerror(pthread_create_result)));
 
 #### 3.1.3 还有其他的一些错误信息如“[XXXClassName] of length XXX would overflow”可能是系统限制String/Array 的长度所致，本文不做深入讨论
 那么，我们关心的就是Thread::CreateNativeThread 时抛出的 OOM 错误，创建线程为什么会导致 OOM 呢？  
-
+  
+  
 ##4. 推断&验证
 既然抛出来 OOM，一定是线程创建过程中触发了某些我们不知道的限制，既然不是 Art 虚拟机为我们设置的堆上限，那么可能是更底层的限制。Android 系统基于 linux，所以 linux 的限制对于 Android 同样适用，这些限制有：  
-
+  
+  
 #### 4.1 /proc/pid/limits 描述着 linux 系统对对应进程的限制，下面是一个样例：  
 
 <a href="https://davim-mi.github.io/">
@@ -112,7 +116,8 @@ PrettySize(stack_size).c_star(), strerror(pthread_create_result)));
 
 剩下的 limits 项中，Max open files 这一项限制最可疑Max open files 表示 每个进程最大打开文件的数目，进程 每打开一个文件就会产生一个文件描述符 fd（记录在 /proc/pid/fd 下面），这个限制表明 fd 的数目不能超过 Max open files 规定的数目。
 后面分析线程创建过程中会发现过程中涉有及到文件描述符。  
-
+  
+  
 #### 4.2  /proc/sys/kernel 中描述的限制
 这些限制中与线程相关的是 /proc/sys/kernel/threads-max，规定了每个进程创建线程数目的上限，所以线程创建导致 OOM 的原因也有可能与这个限制相关。  
 
@@ -120,7 +125,8 @@ PrettySize(stack_size).c_star(), strerror(pthread_create_result)));
 下面对上述的推断进行验证，分两步：本地验证和线上验收。
 - 本地验证：在本地验证推断，试图复现OOM
 - 线上验收：下发插件，验收线上用户 OOM 时确实是由于上面的推断的原因导致的。
-
+  
+  
 ###4.3.1 本地验证
 实验一： 触发大量网络连接（每个连接处于独立的线程中）并保持，每打开一个 socket 都会增加一个 fd（/proc/pid/fd 下多一项）
 *注：不只有这一种增加 fd 数的方式，也可以用其他方法，比如打开文件，创建 handlerthread 等等*
@@ -214,13 +220,13 @@ pthread_create失败时抛出 OOM 的错误信息为"pthread_create (%s stack) f
   <img src="/images/posts/2018-08-20/mmap.jpeg">
 </a>  
 
-打印的错误信息与图 [3-7] 中进程逻辑地址占满导致的 OOM 错误信息吻合，图 [3-7] 中错误信息＂ Try again＂说明系统全局错误标识 errno 为 11(见图 [3-10] 系统错误定义_errdefs.h). pthread_create 过程中，节点４相关代码如下：  
+打印的错误信息与进程逻辑地址占满导致的 OOM 错误信息吻合，图中错误信息＂ Try again＂说明系统全局错误标识 errno 为 11(见系统错误定义_errdefs.h). pthread_create 过程中，节点４相关代码如下：  
 
 <a href="https://davim-mi.github.io/">
   <img src="/images/posts/2018-08-20/pthread_create_failed.jpeg">
 </a>  
 
-此处输出的错误日志"pthread_create failed: clone failed: %s"与我们线上发现的 OOM 二吻合，图 [3-6] 中的错误描述＂ Out of memory＂说明系统全局错误标识 errno 为 12(见图 [3-10] 系统错误定义 _errdefs.h)。 由此线上的 OOM 二就是由于线程数的限制而在节点 5 clone 失败导致 OOM。  
+此处输出的错误日志"pthread_create failed: clone failed: %s"与我们线上发现的 OOM 二吻合，图中的错误描述＂ Out of memory＂说明系统全局错误标识 errno 为 12(见系统错误定义 _errdefs.h)。 由此线上的 OOM 二就是由于线程数的限制而在节点 5 clone 失败导致 OOM。  
 
 ## 6. 结论及监控  
 
@@ -233,7 +239,7 @@ pthread_create失败时抛出 OOM 的错误信息为"pthread_create (%s stack) f
 5. 其他。  
   
   
-###6.2 监控措施
+### 6.2 监控措施
 可以利用 linux 的 inotify 机制进行监控：
 - watch /proc/pid/fd来监控 app 打开文件的情况
 - watch /proc/pid/task来监控线程使用情况。
