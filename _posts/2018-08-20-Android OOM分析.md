@@ -98,10 +98,12 @@ PrettySize(stack_size).c_star(), strerror(pthread_create_result)));
 ##4. 推断&验证
 既然抛出来 OOM，一定是线程创建过程中触发了某些我们不知道的限制，既然不是 Art 虚拟机为我们设置的堆上限，那么可能是更底层的限制。Android 系统基于 linux，所以 linux 的限制对于 Android 同样适用，这些限制有：  
 
-#### 4.1 /proc/pid/limits 描述着 linux 系统对对应进程的限制，下面是一个样例：
+#### 4.1 /proc/pid/limits 描述着 linux 系统对对应进程的限制，下面是一个样例：  
+
 <a href="https://davim-mi.github.io/">
   <img src="/images/posts/2018-08-20/linux_limit.jpeg">
-</a>
+</a>  
+
 用排除法筛选上面样例中的 limits：
 -Max stack size，Max processes 的限制是整个系统的，不是针对某个进程的，排除
 - Max locked memory ，排除，后面会分析，线程创建过程中分配线程私有 stack 使用的 mmap 调用没有设置 MAP_LOCKED，所以这个限制与线程创建过程无关 
@@ -124,24 +126,29 @@ PrettySize(stack_size).c_star(), strerror(pthread_create_result)));
 *注：不只有这一种增加 fd 数的方式，也可以用其他方法，比如打开文件，创建 handlerthread 等等*
 - 实验预期：当进程 fd 数（可以通过 ls /proc/pid/fd | wc -l 获得）突破 /proc/pid/limits 中规定的 Max open files 时，产生 OOM；
 - 实验结果：当 fd 数目到达 /proc/pid/limits 中规定的 Max open files 时，继续开线程确实会导致 OOM 的产生。
-错误信息及堆栈如下：
+错误信息及堆栈如下：  
 
 <a href="https://davim-mi.github.io/">
   <img src="/images/posts/2018-08-20/fd_max_error_stack.jpeg">
-</a>
+</a>  
+
 可以看出，此 OOM 发生时的错误信息确与线上发现的 OOM 一的“Could not allocate JNI Env” 吻合，因此线上上报的 OOM 一 可能 就是由 FD 数超限导致的，不过最终确定需要到线上进行验证 (下一小节)。此外从 ART 虚拟机的 Log 中看出，还有一个关键的信息 “ art: ashmem_create_region failed for 'indirect ref table': Too many open files”，后面会用于问题定位及解释。
 实验二：创建大量的空线程（不做任何事情，直接 sleep）
 - 实验预期：当线程数（可以在/proc/pid/status 中的threads项实时查看）超过/proc/sys/kernel/threads-max 中规定的上限时产生 OOM 崩溃。
 - 实验结果：在 Android7.0 及以上的华为手机（EmotionUI_5.0 及以上）的手机产生 OOM，这些手机的线程数限制都很小 (应该是华为 rom 特意修改的 limits)，每个进程只允许最大同时开 500 个线程，因此很容易复现了。
-OOM 时错误信息如下：
+OOM 时错误信息如下：  
+
 <a href="https://davim-mi.github.io/">
   <img src="/images/posts/2018-08-20/pthread_max_error_stack.jpeg">
-</a>
+</a>  
+
 可以看出 错误信息与我们线上遇到的 OOM 二吻合："pthread_create (1040KB stack) failed: Out of memory" 另外 ART 虚拟机还有一个关键 Log：“pthread_create failed: clone failed: Out of memory”，后面会用于问题定位及解释。
-其他 Rom 的手机线程数的上限都比较大，不容易复现上述问题。但是，对于 32 位的系统，当进程的逻辑地址空间不够的时候也会产生 OOM，每个线程通常需要 mapp 1MB 左右的 stack 空间（stack 大小可以自行设置），32 为系统进程逻辑地址 4GB，用户空间少于 3GB。逻辑地址空间不够（已用逻辑空间地址可以查看 /proc/pid/status 中的 VmPeak/VmSize 记录），此时创建线程产生的 OOM 具有如下信息：
+其他 Rom 的手机线程数的上限都比较大，不容易复现上述问题。但是，对于 32 位的系统，当进程的逻辑地址空间不够的时候也会产生 OOM，每个线程通常需要 mapp 1MB 左右的 stack 空间（stack 大小可以自行设置），32 为系统进程逻辑地址 4GB，用户空间少于 3GB。逻辑地址空间不够（已用逻辑空间地址可以查看 /proc/pid/status 中的 VmPeak/VmSize 记录），此时创建线程产生的 OOM 具有如下信息：  
+
 <a href="https://davim-mi.github.io/">
   <img src="/images/posts/2018-08-20/pthread_max_error_stack2.jpeg">
-</a>
+</a>  
+
 
 ## 5. 线上验收及问题解决
 但是线上的 OOM 一真的时 FD 数目超限，OOM 二真的是由于华为手机线程数超限的原因导致的吗？最终确定还需要取线上设备的数据进行验证。
@@ -165,7 +172,8 @@ OOM 一的定位与解决：
 推断验证成功，即 线程数受限导致创建线程时 clone failed 导致了线上的 OOM 二。
 
 ### 5.1 解释
-下面从代码分析本文描述的 OOM 是怎么发生的，首先线程创建的简易版流程图如下所示：
+下面从代码分析本文描述的 OOM 是怎么发生的，首先线程创建的简易版流程图如下所示：  
+
 <a href="https://davim-mi.github.io/">
   <img src="/images/posts/2018-08-20/thread_create_flow.jpeg">
 </a>  
@@ -175,7 +183,8 @@ OOM 一的定位与解决：
 - 第二列中的 调用 posix C 库的函数 pthread_create 进行线程创建工作
 
 下面对流程图中关键节点（图中有标号的）进行说明：
-1. 图中节点①，/art/runtime/thread.cc 中的函数Thread:CreateNativeThread部分节选代码如下：
+1. 图中节点①，/art/runtime/thread.cc 中的函数Thread:CreateNativeThread部分节选代码如下：  
+2. 
 <a href="https://davim-mi.github.io/">
   <img src="/images/posts/2018-08-20/create_native_thread.jpeg">
 </a>  
@@ -183,34 +192,47 @@ OOM 一的定位与解决：
 可知：
 1. JNIENV 创建不成功时产生 OOM 的错误信息为 "Could not allocate JNI Env"，与文中 OOM 一一致
 pthread_create失败时抛出 OOM 的错误信息为"pthread_create (%s stack) failed: %s"．其中详细的错误信息由 pthread_create 的返回值（错误码）给出。错误码与错误描述的对应关系可以参见 bionic/libc/include/sys/_errdefs.h中的定义。
-文中 OOM 二的具体错误信息为"Out of memory"，就说明 pthread_create 的返回值为 12。
+文中 OOM 二的具体错误信息为"Out of memory"，就说明 pthread_create 的返回值为 12。  
+
 <a href="https://davim-mi.github.io/">
   <img src="/images/posts/2018-08-20/oom_12.jpeg">
-</a>
-2. 图中节点②和③是创建 JNIENV 过程的关键节点，节点②/art/runtime/mem_map.cc 中 函数 MemMap:MapAnonymous 的作用是为 JNIENV 结构体中Indirect_Reference_table（C 层用于存储 JNI 局部 / 全局变量）申请内存，申请内存的方法是节点③所示的函数ashmem_create_region（创建一块 ashmen 匿名共享内存, 并返回一个文件描述符）。节点②代码节选如下：
+</a>  
+
+2. 图中节点②和③是创建 JNIENV 过程的关键节点，节点②/art/runtime/mem_map.cc 中 函数 MemMap:MapAnonymous 的作用是为 JNIENV 结构体中Indirect_Reference_table（C 层用于存储 JNI 局部 / 全局变量）申请内存，申请内存的方法是节点③所示的函数ashmem_create_region（创建一块 ashmen 匿名共享内存, 并返回一个文件描述符）。节点②代码节选如下：  
+  
+  
 <a href="https://davim-mi.github.io/">
   <img src="/images/posts/2018-08-20/ashmem_create_region.jpeg">
-</a>
+</a>  
+
 我们线上的OOM 一的错误信息＂ashmem_create_region failed for 'indirect ref table': Too many open files＂，与此处打印的信息吻合。＂Too many open files＂的错误描述说明此处的 errno（系统全局错误标识）为 24(见系统错误定义 _errdefs.h)。由此看出我们线上的 OOM 一是由于文件描述符数目已满，ashmem_create_region 无法返回新的 FD 而导致的。  
 
-3. 图中节点④和⑤是调用 C 库创建线程时的环节，创建线程首先 调用 __allocate_thread 函数申请线程私有的栈内存 (stack) 等，然后 调用 clone 方法进行线程创建．申请 stack 采用的时 mmap 的方式，节点⑤代码节选如下：
+3. 图中节点④和⑤是调用 C 库创建线程时的环节，创建线程首先 调用 __allocate_thread 函数申请线程私有的栈内存 (stack) 等，然后 调用 clone 方法进行线程创建．申请 stack 采用的时 mmap 的方式，节点⑤代码节选如下：  
+  
+  
 <a href="https://davim-mi.github.io/">
   <img src="/images/posts/2018-08-20/mmap.jpeg">
-</a>
-打印的错误信息与图 [3-7] 中进程逻辑地址占满导致的 OOM 错误信息吻合，图 [3-7] 中错误信息＂ Try again＂说明系统全局错误标识 errno 为 11(见图 [3-10] 系统错误定义_errdefs.h). pthread_create 过程中，节点４相关代码如下：
+</a>  
+
+打印的错误信息与图 [3-7] 中进程逻辑地址占满导致的 OOM 错误信息吻合，图 [3-7] 中错误信息＂ Try again＂说明系统全局错误标识 errno 为 11(见图 [3-10] 系统错误定义_errdefs.h). pthread_create 过程中，节点４相关代码如下：  
+
 <a href="https://davim-mi.github.io/">
   <img src="/images/posts/2018-08-20/pthread_create_failed.jpeg">
-</a>
+</a>  
+
 此处输出的错误日志"pthread_create failed: clone failed: %s"与我们线上发现的 OOM 二吻合，图 [3-6] 中的错误描述＂ Out of memory＂说明系统全局错误标识 errno 为 12(见图 [3-10] 系统错误定义 _errdefs.h)。 由此线上的 OOM 二就是由于线程数的限制而在节点 5 clone 失败导致 OOM。  
 
-## 6. 结论及监控
+## 6. 结论及监控  
+
 ### 6.1导致OOM发生的原因
 综上，可以导致 OOM 的原因有以下几种：
 1. 文件描述符 (fd) 数目超限，即 proc/pid/fd 下文件数目突破 /proc/pid/limits 中的限制。可能的发生场景有：短时间内大量请求导致 socket 的 fd 数激增，大量（重复）打开文件等 ；
 2. 线程数超限，即proc/pid/status中记录的线程数（threads 项）突破 /proc/sys/kernel/threads-max 中规定的最大线程数。可能的发生场景有：app 内多线程使用不合理，如多个不共享线程池的 OKhttpclient 等等 ；
 3. 传统的 java 堆内存超限，即申请堆内存大小超过了Runtime.getRuntime().maxMemory()；
 4. （低概率）32 为系统进程逻辑空间被占满导致 OOM；
-5. 其他。
+5. 其他。  
+  
+  
 ###6.2 监控措施
 可以利用 linux 的 inotify 机制进行监控：
 - watch /proc/pid/fd来监控 app 打开文件的情况
