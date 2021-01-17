@@ -1,6 +1,6 @@
 # Android-OOM(OutOfMemoryError）分析
 
-**OOM 发生的原因有以下几类**
+OOM 发生的原因有以下几类
 1. 文件描述符 (fd) 数目超限，即 proc/pid/fd 下文件数目突破 /proc/pid/limits 中的限制。可能的发生场景有短时间内大量请求导致 socket 的 fd 数激增，大量（重复）打开文件等 ；
 2. 线程数超限，即proc/pid/status中记录的线程数（threads 项）突破 /proc/sys/kernel/threads-max 中规定的最大线程数。可能的发生场景有app 内多线程使用不合理，如多个不共享线程池的 OKhttpclient 等等 ；
 3. 传统的 java 堆内存超限，即申请堆内存大小超过了Runtime.getRuntime().maxMemory()；
@@ -12,6 +12,7 @@
 1. 线上的 OOM 真的全是由于堆内存紧张导致的吗？
 2. 有没有 App 堆内存宽裕，设备物理内存也宽裕的情况下发生 OOM 的可能？
 3. 内存充裕的时候出现 OOM 崩溃？
+
 通过公司的 APM 平台发现，一部分 OOM 有这样的特征，即：OOM 崩溃时，java 堆内存远远低于 Android 虚拟机设定的上限，并且物理内存充足，SD 卡空间充足
 既然内存充足，这时候为什么会有 OOM 崩溃呢？
 
@@ -19,14 +20,15 @@
 在详细描述问题之前，先弄清楚一个问题：
 什么导致了 OOM 的产生？
 下面是几个关于 Android 官方声明内存限制阈值的 API：
-	1. AcitivityManager.getMemoryClass()  虚拟机JAVA堆大小的上限，分配对象时突破这个大小就会OOM
-	2. AcitivityManager.getLargeMemeoryClass() menifest中设置largeheap = true时，虚拟机堆上限
-	3. Runtime.getRuntime().maxMemory() 当前虚拟机实例的内存使用上限，为上述两者之一
-	4. Runtime.getRuntime().totalMemory() 当前已经申请的内存，包括已经使用的和还没有使用的
-	5. Runtime.getRuntime().freeMemory() 上一条已经申请但是未使用的那部分，那么已经申请并正在在使用的部分，used = totalMemory()- freeMemeory()
-	6. ActivityManager.MemoryInfo.totalMem 设备总内存
-	7. ActivityManager.MemoryInfo.availMem 设备当前可用内存
-	8. /proc/memeinfo 记录设备内存信息
+1. AcitivityManager.getMemoryClass()  虚拟机JAVA堆大小的上限，分配对象时突破这个大小就会OOM
+2. AcitivityManager.getLargeMemeoryClass() menifest中设置largeheap = true时，虚拟机堆上限
+3. Runtime.getRuntime().maxMemory() 当前虚拟机实例的内存使用上限，为上述两者之一
+4. Runtime.getRuntime().totalMemory() 当前已经申请的内存，包括已经使用的和还没有使用的
+5. Runtime.getRuntime().freeMemory() 上一条已经申请但是未使用的那部分，那么已经申请并正在在使用的部分，used = totalMemory()- freeMemeory()
+6. ActivityManager.MemoryInfo.totalMem 设备总内存
+7. ActivityManager.MemoryInfo.availMem 设备当前可用内存
+8. /proc/memeinfo 记录设备内存信息
+
 通常认为 OOM 发生是由于 java 堆内存不够用了，即
 Runtime.getRuntime().maxMemory() 这个指标满足不了申请堆内存大小时
 
@@ -61,7 +63,8 @@ void Thread:ThrowOutOfMemoryError (const char * msg)  参数msg携带了OOM时�
 函数：
 	void Heap::ThrowOutOfMemoryError(Thread* self, size_t byte_count, AllocatorType allocator_type)
 抛出时的错误信息：
-	oss << "Failed to allocate a " << byte_cout << " byte allocation withe " << total_bytes_free << " free bytes and " << PrettySize(GetFreeMemoryUntilOOME()) " unitl OOM "
+	oss << "Failed to allocate a " << byte_cout << " byte allocation with"
+  << total_bytes_free << " free bytes and " <<   PrettySize(GetFreeMemoryUntilOOME()) " unitl OOM "
 ```
 这种抛出的其实就是堆内存不够用的时候，即前面提到的申请堆内存大小超过了Runtime.getRuntime().maxMemory()
 #### 3.1.2 第二个地方是创建线程时
@@ -69,7 +72,8 @@ void Thread:ThrowOutOfMemoryError (const char * msg)  参数msg携带了OOM时�
 系统源码文件：
     /art/runtime/thread.cc
 函数：
-	void Thread::CreateNativeThread(JNIENV* evn, jobject java_peer, size_t stack_size, bool is_daemon)
+	void Thread::CreateNativeThread(JNIENV* evn, jobject java_peer, size_t
+      stack_size, bool is_daemon)
 抛出时错误信息：
 	“could not allocate JNI Env"
     或者
