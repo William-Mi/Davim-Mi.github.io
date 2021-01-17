@@ -5,7 +5,7 @@ OOM 发生的原因有以下几类
 2. 线程数超限，即proc/pid/status中记录的线程数（threads 项）突破 /proc/sys/kernel/threads-max 中规定的最大线程数。可能的发生场景有app 内多线程使用不合理，如多个不共享线程池的 OKhttpclient 等等 ；
 3. 传统的 java 堆内存超限，即申请堆内存大小超过了Runtime.getRuntime().maxMemory()；
 4. 32 为系统进程逻辑空间被占满导致 OOM（低概率）;
-5. 其他。
+5. 其他。  
 
 ## 1. 现状
 对于每一个移动开发者，内存是都需要小心使用的资源，而线上出现的 OOM（OutOfMemoryError）都会让开发者抓狂，因为我们通常仰仗的直观的堆栈信息对于定位这种问题通常帮助不大。我们可以紧衣缩食的利用宝贵的堆内存（比如，使用小图片，bitmap 复用等），可是:
@@ -14,7 +14,7 @@ OOM 发生的原因有以下几类
 3. 内存充裕的时候出现 OOM 崩溃？
 
 通过公司的 APM 平台发现，一部分 OOM 有这样的特征，即：OOM 崩溃时，java 堆内存远远低于 Android 虚拟机设定的上限，并且物理内存充足，SD 卡空间充足
-既然内存充足，这时候为什么会有 OOM 崩溃呢？
+既然内存充足，这时候为什么会有 OOM 崩溃呢？  
 
 ## 2. 问题描述
 在详细描述问题之前，先弄清楚一个问题：
@@ -34,15 +34,18 @@ Runtime.getRuntime().maxMemory() 这个指标满足不了申请堆内存大小�
 
 这种 OOM 可以非常方便的验证（比如: 通过 new byte[] 的方式尝试申请超过阈值maxMemory() 的堆内存），通常这种 OOM 的错误信息通常如下：
 ````
-java.lang.Out.OfMemoryError: Failed to allocate a XXX byte allocation with XXX free bytes and XXXKB until OOM
+java.lang.Out.OfMemoryError: Failed to allocate a XXX byte allocation with XXX free bytes and   
+XXXKB until OOM
 ````
 
 前面已经提到发现的 OOM 案例中堆内存充裕（Runtime.getRuntime().maxMemory() 大小的堆内存还剩余很大一部分），设备当前内存也很充裕（ActivityManager.MemoryInfo.availMem 还有很多）。这些 OOM 的错误信息大致有下面两种：
+
 ### 2.1  这种 OOM 在 Android6.0，Android7.0 上各个机型均有发生，文中简称为 OOM 一，错误信息如下：
 ```
 java.lang.OutOfMemoryError: Could not allocate JNI ENV
 
-```
+```  
+
 ### 2.2 集中发生在 Android7.0 及以上的华为手机（EmotionUI_5.0 及以上）的 OOM，简称为 OOM 二，对应错误信息如下：
 ```
 java.lang.OutOfMemoryError: pthread_create(1040KB stack) failed: Out of memory
@@ -55,7 +58,8 @@ Android 系统中，OutOfMemoryError 这个错误是怎么被系统抛出的？�
 ```
 void Thread:ThrowOutOfMemoryError (const char * msg)  参数msg携带了OOM时的错误信息
 ```
- 搜索代码可以发现以下几个地方调用了上述方法抛出 OutOfMemoryError 错误
+ 搜索代码可以发现以下几个地方调用了上述方法抛出 OutOfMemoryError 错误  
+ 
 #### 3.1.1 第一个地方是堆操作时
 ```
 系统源码文件：
@@ -66,7 +70,8 @@ void Thread:ThrowOutOfMemoryError (const char * msg)  参数msg携带了OOM时�
 	oss << "Failed to allocate a " << byte_cout << " byte allocation with"
   << total_bytes_free << " free bytes and " <<   PrettySize(GetFreeMemoryUntilOOME()) " unitl OOM "
 ```
-这种抛出的其实就是堆内存不够用的时候，即前面提到的申请堆内存大小超过了Runtime.getRuntime().maxMemory()
+这种抛出的其实就是堆内存不够用的时候，即前面提到的申请堆内存大小超过了Runtime.getRuntime().maxMemory()  
+
 #### 3.1.2 第二个地方是创建线程时
 ```
 系统源码文件：
