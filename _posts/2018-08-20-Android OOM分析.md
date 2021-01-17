@@ -1,11 +1,11 @@
 #Android-OOM(OutOfMemoryError）分析
 
 **OOM 发生的原因有以下几类：**
-	1. 文件描述符 (fd) 数目超限，即 proc/pid/fd 下文件数目突破 /proc/pid/limits 中的限制。可能的发生场景有短时间内大量请求导致 socket 的 fd 数激增，大量（重复）打开文件等 ；
-	2. 线程数超限，即proc/pid/status中记录的线程数（threads 项）突破 /proc/sys/kernel/threads-max 中规定的最大线程数。可能的发生场景有app 内多线程使用不合理，如多个不共享线程池的 OKhttpclient 等等 ；
-	3. 传统的 java 堆内存超限，即申请堆内存大小超过了Runtime.getRuntime().maxMemory()；
-	4. 32 为系统进程逻辑空间被占满导致 OOM（低概率）;
-	5. 其他。
+    1.文件描述符 (fd) 数目超限，即 proc/pid/fd 下文件数目突破 /proc/pid/limits 中的限制。可能的发生场景有短时间内大量请求导致 socket 的 fd 数激增，大量（重复）打开文件等 ；
+    2.线程数超限，即proc/pid/status中记录的线程数（threads 项）突破 /proc/sys/kernel/threads-max 中规定的最大线程数。可能的发生场景有app 内多线程使用不合理，如多个不共享线程池的 OKhttpclient 等等 ；
+    3.传统的 java 堆内存超限，即申请堆内存大小超过了Runtime.getRuntime().maxMemory()；
+    4.32 为系统进程逻辑空间被占满导致 OOM（低概率）;
+    5.其他。
 ## 1. 现状
 对于每一个移动开发者，内存是都需要小心使用的资源，而线上出现的 OOM（OutOfMemoryError）都会让开发者抓狂，因为我们通常仰仗的直观的堆栈信息对于定位这种问题通常帮助不大。我们可以紧衣缩食的利用宝贵的堆内存（比如，使用小图片，bitmap 复用等），可是:
 	1. 线上的 OOM 真的全是由于堆内存紧张导致的吗？
